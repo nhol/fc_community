@@ -1,7 +1,23 @@
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import make_password, check_password
 from .models import Fcuser
+
+
+def home(request):
+    user_id = request.session.get('user')
+    if user_id:
+        fcuser = Fcuser.objects.get(pk=user_id)
+        return HttpResponse(fcuser.username)
+
+    return HttpResponse('Home!')
+
+
+def logout(request):
+    if request.session.get('user'):
+        del(request.session['user'])
+
+    return redirect('/')
 
 
 def login(request):
@@ -17,8 +33,8 @@ def login(request):
         else:
             fcuser = Fcuser.objects.get(username=username)
             if check_password(password, fcuser.password):
-                res_data['error'] = '로그인 성공'
-                pass
+                request.session['user'] = fcuser.id
+                return redirect('/')
             else:
                 res_data['error'] = '비밀번호가 틀렸습니다.'
 
